@@ -10,12 +10,14 @@ with files at the initial startup.
 The set up is pretty straight forward. The application can be run from sbt with:
 ```bash
 > sbt
-> runMain searcher.Main src/main/resources/textFiles
+> runMain searcher.Main /full/path/to/your/textFiles/directory
  ```
 Or just run:
 ```bash
-> sbt "runMain searcher.Main src/main/resources/textFiles"
+> sbt "runMain searcher.Main /full/path/to/your/textFiles/directory"
  ```
+
+The directory can be any directory containing files.
 
 From there you can search for any words separated by a space. 
 The application will check how many words were actually in a file and generate a 
