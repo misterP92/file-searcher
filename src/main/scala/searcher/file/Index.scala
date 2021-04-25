@@ -13,21 +13,22 @@ object Index {
       case Failure(exception) =>
         println(exception.getMessage, exception)
         throw FileContentExtractionError(exception)
-    })).map(_.toList).map(new Index(_))
+    })).map(_.toList).map { listOfFiles =>
+      println(s"Loaded in ${listOfFiles.length} amount of files.")
+      listOfFiles
+    }.map(new Index(_))
   }
 }
 
 final case class Index(files: List[FileRepresentation]) {
 
-  def searchForWordInFiles(searchSentence: Sentence): Seq[FileDefinition] = {
-    searchFromFiles(searchSentence.words)
-  }
+  def searchForWordInFiles(searchSentence: Sentence): Seq[FileDefinition] = searchFromFiles(searchSentence.words)
 
   private def searchFromFiles(words: List[Word]): Seq[FileDefinition] = {
     @tailrec
     def innerSearch(filesToCheck: List[FileRepresentation], result: Seq[FileDefinition]): Seq[FileDefinition] = filesToCheck match {
       case Nil => result
-      case _ :: _ if result.size == 10 => result
+      case _ :: _ if result.reachedAllowedCapacity => result
       case head :: tail =>
         val updatedWords = searchWordsInOneFile(words, head)
         val resultForFile = FileDefinition(head.path, updatedWords)

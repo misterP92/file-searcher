@@ -6,7 +6,8 @@ object FileDefinition {
   private val Found: Boolean = true
 
   final case class Calc(existing: Int, found: Int) {
-    def calcPercentage: Double = BigDecimal(found).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble / BigDecimal(existing).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    private def toBigDec(toChange: Double): Double = BigDecimal(toChange).setScale(2, BigDecimal.RoundingMode.HALF_UP).toDouble
+    def calcPercentage: Double = if(existing != 0.0) toBigDec(found) / toBigDec(existing) else 0.0
     def withAddedFound: Calc = copy(found = found + 1)
     def withAddedExisting: Calc = copy(existing = existing + 1)
   }
@@ -32,8 +33,5 @@ object FileDefinition {
 
 final case class FileDefinition(fileName: FilePath, percentage: FileDefinition.PercentageFound) {
   def calcPercentage: Double = percentage.calcPercentage
-  def prettyCalcPercentage: String = s"${
-    val value = this.calcPercentage * 100
-    value - (value % 0.01)
-  } %"
+  def prettyCalcPercentage: String = s"${(this.calcPercentage * 100).round} %"
 }

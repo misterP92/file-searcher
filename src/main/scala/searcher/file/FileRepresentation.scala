@@ -17,7 +17,6 @@ object FileRepresentation {
   private val CodecList: Seq[Codec] = Seq(UTF8, ISO8859, fileEncodingCodec, default)
 
   def apply(file: File): Try[FileRepresentation] = {
-    println(file.getPath)
     tryEncodings(file, CodecList).map(new FileRepresentation(FilePath(file.getPath), _))
   }
 

@@ -30,5 +30,7 @@ package object searcher {
         println(s"File name: ${one.fileName.getOnlyName} : ${one.prettyCalcPercentage}")
       }
     }
+
+    def reachedAllowedCapacity: Boolean = underlying.count(_.calcPercentage == 1.0) == SizeAtMost
   }
 }
