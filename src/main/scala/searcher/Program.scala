@@ -2,7 +2,8 @@ package searcher
 
 import searcher.errorHandling.FileReaderError
 import searcher.errorHandling.FileReaderError._
-import searcher.file.{Index, Sentence}
+import searcher.file.IndexedFiles.searchForWords
+import searcher.file.{FileResult, IndexedFiles, Words}
 
 import java.io.File
 import scala.annotation.tailrec
@@ -22,17 +23,45 @@ object Program {
     } yield file
   }
 
+  def start(indexedFiles: IndexedFiles): Unit = {
+    innerStart(indexedFiles)(searchForWords)
+  }
+
   @tailrec
-  def start(indexedFiles: Index): Unit = {
+  def innerStart(indexedFiles: IndexedFiles)(searcher: (IndexedFiles, Words, Seq[FileResult] => Seq[FileResult]) => IndexedFiles): Unit = {
     print(s"search> ")
-    val searchString = readLine()
-    if (searchString.equals(":quit")) {
-      println("Quiting the application")
-    } else {
-      val sentence = Sentence.fromStrings(searchString.split(SpaceDelimiter).toList)
-      val result = indexedFiles.searchForWordInFiles(sentence).limitToTen
-      result.prettyPrint()
-      start(indexedFiles)
+    readLine() match {
+      case ":quit" => println("Quiting the application")
+      case ":clear" => innerStart(indexedFiles.withClearedMemory)(searcher)
+      case searchString =>
+        val words = Words.fromStrings(searchString.split(SpaceDelimiter))
+        println(s"Will be searching for: ${words.asString}")
+        val result = searcher(indexedFiles, words, limitResultFiles)
+        result.latestResult.prettyPrint()
+        innerStart(result)(searcher)
     }
   }
+
+  private def limitResultFiles: Seq[FileResult] => Seq[FileResult] = {
+    case listOfFiles if listOfFiles.length > SizeAtMost => listOfFiles.sortBy(_.calcPercentage).tail
+    case listOfFiles => listOfFiles
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

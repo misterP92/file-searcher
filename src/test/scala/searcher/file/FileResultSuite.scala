@@ -3,36 +3,36 @@ package searcher.file
 import org.scalatest.funsuite.AnyFunSuiteLike
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.prop.TableDrivenPropertyChecks
-import searcher.file.FileDefinition.PercentageFound
 import searcher.file.FileRepresentation.FilePath
+import searcher.file.FileResult.WordDifferentiate
 
-object FileDefinitionSuite {
+object FileResultSuite {
   private val PathForFile: String = "path/to/some/file/file.txt"
-  private val DefaultWords: List[Word] = List(Word("hej"), Word("this").withFound, Word("is").withFound, Word("ok"))
+  private val DefaultWords: (Int, Int) = (2, 4)
 }
 
-class FileDefinitionSuite extends AnyFunSuiteLike with TableDrivenPropertyChecks {
-  import FileDefinitionSuite._
+class FileResultSuite extends AnyFunSuiteLike with TableDrivenPropertyChecks {
+  import FileResultSuite._
 
   test("Table testing for PercentageFound") {
     val tables = Table(
       ("Name", "InputWords", "ExpectedPercentage"),
       ("List is 50 %", DefaultWords, 0.50),
-      ("Empty list is 0 %", List.empty, 0.0),
-      ("List is 100 %", List(Word("hej").withFound, Word("this").withFound, Word("is").withFound, Word("ok").withFound), 1.0),
-      ("List Is 25 %", List(Word("hej"), Word("this"), Word("is"), Word("ok").withFound), 0.25),
-      ("List with words is 0 %", List(Word("hej"), Word("this"), Word("is"), Word("ok")), 0.0)
+      ("Empty list is 0 %", (0, 0), 0.0),
+      ("List is 100 %", (5, 5), 1.0),
+      ("List Is 25 %", (1, 4), 0.25),
+      ("List with words is 0 %", (0, 4), 0.0)
     )
 
-    forAll(tables) { (name: String, words: List[Word], expectedValue: Double) =>
+    forAll(tables) { case (name: String, (found: Int, existing: Int), expectedValue: Double) =>
       println(name)
-      val percentage = PercentageFound(words)
+      val percentage = WordDifferentiate(found, existing)
       percentage.calcPercentage shouldBe expectedValue
     }
   }
 
   test("Test that FileDefinition apply function works") {
-    val file = FileDefinition(FilePath(PathForFile), DefaultWords)
+    val file = FileResult(FilePath(PathForFile), DefaultWords._1, DefaultWords._2)
     file.fileName.path shouldBe PathForFile
     file.fileName.getOnlyName shouldBe "file.txt"
     file.percentage.calcPercentage shouldBe 0.50
@@ -40,7 +40,7 @@ class FileDefinitionSuite extends AnyFunSuiteLike with TableDrivenPropertyChecks
   }
 
   test("Test that FileDefinition with no words works") {
-    val file = FileDefinition(FilePath(PathForFile), List.empty)
+    val file = FileResult(FilePath(PathForFile), 0, 0)
     file.fileName.path shouldBe PathForFile
     file.fileName.getOnlyName shouldBe "file.txt"
     file.percentage.calcPercentage shouldBe 0.0
@@ -48,7 +48,7 @@ class FileDefinitionSuite extends AnyFunSuiteLike with TableDrivenPropertyChecks
   }
 
   test("Test that wrong FilePath returns it self") {
-    val file = FileDefinition(FilePath("wrongpath....hej.txt"), List.empty)
+    val file = FileResult(FilePath("wrongpath....hej.txt"), 0, 0)
     file.fileName.path shouldBe "wrongpath....hej.txt"
     file.fileName.getOnlyName shouldBe "wrongpath....hej.txt"
     file.percentage.calcPercentage shouldBe 0.0
@@ -56,7 +56,7 @@ class FileDefinitionSuite extends AnyFunSuiteLike with TableDrivenPropertyChecks
   }
 
   test("Test that FileDefinition class works") {
-    val file = new FileDefinition(FilePath(PathForFile), PercentageFound(FileDefinition.Calc(4, 2)))
+    val file = new FileResult(FilePath(PathForFile), WordDifferentiate(2, 4))
     file.fileName.path shouldBe PathForFile
     file.fileName.getOnlyName shouldBe "file.txt"
     file.percentage.calcPercentage shouldBe 0.50
